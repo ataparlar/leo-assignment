@@ -1,0 +1,6 @@
+# pcd_reader node config file
+
+/pcd_reader/pcd_read:
+  ros__parameters:
+    pcd_file1: '/home/ataparlar/leo_ws/src/cpp_pubsub/data/capture0001.pcd'
+    pcd_file2: '/home/ataparlar/leo_ws/src/cpp_pubsub/data/capture0002.pcd'
