@@ -7,6 +7,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
+#include <tf2/exceptions.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
 
 // #include <sensor_msgs/PointCloud2.h>
 
@@ -62,7 +65,29 @@ class ParametersClass: public rclcpp::Node
                 << pcl_cloud1->width * pcl_cloud1->height
                 << " data points from .pcd with the following fields: ");
                 
-                
+
+
+      // GICP part
+
+      using PointT = pcl::PointXYZ;
+
+      pcl::PointCloud<PointT>::Ptr pcl_output (new pcl::PointCloud<PointT>);
+
+      pcl::PointCloud<PointT>::Ptr src (new pcl::PointCloud<PointT>);
+      //pcl::copyPointCloud(pcl_cloud1, *src);
+      pcl::PointCloud<PointT>::Ptr tgt (new pcl::PointCloud<PointT>);
+      //pcl::copyPointCloud (pcl_cloud1, *tgt);
+      pcl::PointCloud<PointT> output;
+
+
+      // pcl::GeneralizedIterativeClosestPoint<PointT, PointT> reg;
+      // reg.setInputSource(pcl_cloud1);
+      // reg.setInputTarget(pcl_cloud2);
+      // reg.setMaximumIterations(50);
+      // reg.setTransformationEpsilon(1e-8);
+      
+      // reg.align (output);
+
 
       int x = 0;
       while(true){
@@ -77,23 +102,15 @@ class ParametersClass: public rclcpp::Node
 };
 
 
-
-// class PointCloudPublisherClass: public rclcpp::Node
+// class GICP: public pcl::GeneralizedIterativeClosestPoint<pcl::PointCloud<pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>> 
 // {
-//   sensor_msgs::PointCloud2 points1;
-//   sensor_msgs::PointCloud2 points2;
-
-  
-
 //   public:
-//     PointCloudPublisherClass()
-//     : Node("pc_publisher")
+//     GICP()
 //     {
-      
-//       //publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("points1", 10);
 
 //     }
-// };
+// }
+
 
 
 int main (int argc, char** argv)
