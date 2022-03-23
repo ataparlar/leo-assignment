@@ -27,7 +27,11 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(PCL 1.10 REQUIRED common io)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(Eigen3 3.3 REQUIRED)
 
 if( PCL_FOUND )
   # [C/C++]>[General]>[Additional Include Directories]
@@ -71,9 +75,14 @@ target_link_libraries( point_cloud_talker ${PCL_LIBRARIES} )
 
 # pcd_reader
 add_executable(pcd_reader src/pcd_read.cpp)
-ament_target_dependencies(pcd_reader PCL
+ament_target_dependencies(pcd_reader
+tf2
+tf2_ros
+PCL
+Eigen3
+geometry_msgs
 sensor_msgs
- rclcpp)
+rclcpp)
 install(TARGETS
 pcd_reader
 DESTINATION lib/${PROJECT_NAME}
