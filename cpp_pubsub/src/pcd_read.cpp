@@ -86,28 +86,6 @@ class ParametersClass: public rclcpp::Node
                 << pcl_cloud1->width * pcl_cloud1->height
                 << " data points from .pcd with the following fields: ");
 
-
-      using PointT = pcl::PointXYZ;
-
-      // GICP part
-      
-      pcl::PointCloud<PointT>::Ptr pcl_output (new pcl::PointCloud<PointT>);
-
-      pcl::PointCloud<PointT>::Ptr src (new pcl::PointCloud<PointT>);
-      //pcl::copyPointCloud(pcl_cloud1, *src);
-      pcl::PointCloud<PointT>::Ptr tgt (new pcl::PointCloud<PointT>);
-      //pcl::copyPointCloud (pcl_cloud1, *tgt);
-      pcl::PointCloud<PointT> output;
-
-
-      // pcl::GeneralizedIterativeClosestPoint<PointT, PointT> reg;
-      // reg.setInputSource(pcl_cloud1);
-      // reg.setInputTarget(pcl_cloud2);
-      // reg.setMaximumIterations(50);
-      // reg.setTransformationEpsilon(1e-8);
-      
-      // reg.align (output);
-
       pc_publisher_->publish(ros_cloud1);
       pc_publisher_2->publish(ros_cloud2);
 
@@ -120,11 +98,13 @@ class ParametersClass: public rclcpp::Node
       //     }
       //   x++;
       // }
+      PointCloudProcessor pc;
+      
     };
     
 };
 
-class PointCloudProcessor: public rclcpp::Node
+class PointCloudProcessor
 {
   public:
     using PointCloud = pcl::PointCloud<pcl::PointXYZ>;
@@ -139,14 +119,22 @@ class PointCloudProcessor: public rclcpp::Node
       pcl::registration::TransformationEstimation<PointSource, PointTarget>::Matrix4 trans_matrix;
 
       TESVD.estimateRigidTransformation(pcl_cloud1, pcl_cloud2, trans_matrix);
+
+      // RCLCPP_INFO_STREAM(this->get_logger(), "Transformation matrix from my function: \n"
+      //           << "    | %6.3f %6.3f %6.3f | \n" << trans_matrix (0,0) <<  trans_matrix (0,1) <<  trans_matrix (0,2)
+      //           << "R = | %6.3f %6.3f %6.3f | \n" <<  trans_matrix (1,0) <<  trans_matrix (1,1) <<  trans_matrix (1,2)
+      //           << "    | %6.3f %6.3f %6.3f | \n" <<  trans_matrix (2,0) <<  trans_matrix (2,1) <<  trans_matrix (2,2)
+      //           << "\n"
+      //           << "t = < %0.3f, %0.3f, %0.3f >\n" <<  trans_matrix (0,3) <<  trans_matrix (1,3) <<  trans_matrix (2,3)
+      //           );      
       
-      std::cout << "The Estimated Rotation and translation matrices (using getTransformation function) are : \n" << std::endl;
-      printf ("\n");
-      printf ("    | %6.3f %6.3f %6.3f | \n", trans_matrix (0,0), trans_matrix (0,1), trans_matrix (0,2));
-      printf ("R = | %6.3f %6.3f %6.3f | \n", trans_matrix (1,0), trans_matrix (1,1), trans_matrix (1,2));
-      printf ("    | %6.3f %6.3f %6.3f | \n", trans_matrix (2,0), trans_matrix (2,1), trans_matrix (2,2));
-      printf ("\n");
-      printf ("t = < %0.3f, %0.3f, %0.3f >\n", trans_matrix (0,3), trans_matrix (1,3), trans_matrix (2,3));
+      // std::cout << "The Estimated Rotation and translation matrices (using getTransformation function) are : \n" << std::endl;
+      // printf ("\n");
+      // printf ("    | %6.3f %6.3f %6.3f | \n", trans_matrix (0,0), trans_matrix (0,1), trans_matrix (0,2));
+      // printf ("R = | %6.3f %6.3f %6.3f | \n", trans_matrix (1,0), trans_matrix (1,1), trans_matrix (1,2));
+      // printf ("    | %6.3f %6.3f %6.3f | \n", trans_matrix (2,0), trans_matrix (2,1), trans_matrix (2,2));
+      // printf ("\n");
+      // printf ("t = < %0.3f, %0.3f, %0.3f >\n", trans_matrix (0,3), trans_matrix (1,3), trans_matrix (2,3));
 
       return trans_matrix;
     };
@@ -162,22 +150,25 @@ class PointCloudProcessor: public rclcpp::Node
 
       pcl::PointCloud<pcl::PointXYZ>::Ptr align(new PointCloud);
 
-      ParametersClass param;
+      ParametersClass param1;
 
-      gicp.setInputSource(param.file_loader("pcd_file1"));
-      gicp.setInputTarget(param.file_loader("pcd_file2"));
+      gicp.setInputSource(param1.file_loader("pcd_file1"));
+      gicp.setInputTarget(param1.file_loader("pcd_file2"));
       gicp.align(*align);
 
       Eigen::Matrix4f src2tgt   = gicp.getFinalTransformation();
       double score     = gicp.getFitnessScore();
       bool is_converged = gicp.hasConverged();
+    
     };
 
   PointCloudProcessor()
-     : Node("point_cloud_processor")
      { 
-      //  rclcpp::Publisher<Eigen::Matrix4f>::SharedPtr transform_pub;
-      //  rclcpp::Publisher<std::string>::SharedPtr transform_pub;
+       ParametersClass param;
+       PointCloud::Ptr pcl_cloud1 = param.file_loader("pcd_file1");
+       PointCloud::Ptr pcl_cloud2 = param.file_loader("pcd_file2");
+
+       Eigen::Matrix4f trans_matrix = transform_finder(*pcl_cloud1, *pcl_cloud2);
      }
 
 };
@@ -242,16 +233,6 @@ private:
 
 
 
-// class GICP: public pcl::GeneralizedIterativeClosestPoint<pcl::PointCloud<pcl::PointXYZ>, pcl::PointCloud<pcl::PointXYZ>> 
-// {
-//   public:
-//     GICP()
-//     {
-
-//     }
-// }
-
-
 
 int main (int argc, char** argv)
 {
@@ -262,8 +243,10 @@ int main (int argc, char** argv)
 
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<ParametersClass>());
-  rclcpp::spin(std::make_shared<StaticFramePublisher>(transformation1));
-  rclcpp::spin(std::make_shared<StaticFramePublisher>(transformation2));
+  // rclcpp::spin(std::make_shared<StaticFramePublisher>(transformation1));
+  // rclcpp::spin(std::make_shared<StaticFramePublisher>(transformation2));
+
+
 
   rclcpp::shutdown();
 
