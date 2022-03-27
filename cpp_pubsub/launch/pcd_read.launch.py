@@ -53,7 +53,7 @@ def generate_launch_description():
     pcd_reader_node = Node(
         package='point_cloud_registering',
         namespace="pcd_reader",
-        executable='pcd_reader',
+        executable='point_cloud_registration',
         name='pcd_read',
         parameters=[
             param_file_path

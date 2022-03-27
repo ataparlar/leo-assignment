@@ -25,7 +25,7 @@ install(DIRECTORY
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
-find_package(PCL 1.10 REQUIRED common io)
+find_package(PCL 1.12 REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -59,23 +59,64 @@ add_definitions(${PCL_DEFINITIONS})
 
 
 
+# # point_cloud_talker
+# add_executable(point_cloud_talker src/publisher_member_function.cpp)
+# ament_target_dependencies(point_cloud_talker rclcpp sensor_msgs std_msgs PCL)
+# install(TARGETS
 # point_cloud_talker
-add_executable(point_cloud_talker src/publisher_member_function.cpp)
-ament_target_dependencies(point_cloud_talker rclcpp sensor_msgs std_msgs PCL)
-install(TARGETS
-point_cloud_talker
-DESTINATION lib/${PROJECT_NAME}
-)
+# DESTINATION lib/${PROJECT_NAME}
+# )
 
-# [Linker]>[Input]>[Additional Dependencies]
-target_link_libraries( point_cloud_talker ${PCL_LIBRARIES} )
+# # [Linker]>[Input]>[Additional Dependencies]
+# target_link_libraries( point_cloud_talker ${PCL_LIBRARIES} )
 
 
 
 
+# # pcd_reader
+# add_executable(pcd_reader src/pcd_read.cpp)
+# ament_target_dependencies(pcd_reader
+# tf2
+# tf2_ros
+# PCL
+# Eigen3
+# geometry_msgs
+# sensor_msgs
+# rclcpp)
+# install(TARGETS
 # pcd_reader
-add_executable(pcd_reader src/pcd_read.cpp)
-ament_target_dependencies(pcd_reader
+# DESTINATION lib/${PROJECT_NAME}
+# )
+
+# # [Linker]>[Input]>[Additional Dependencies]
+# target_link_libraries( pcd_reader ${PCL_LIBRARIES} )
+
+
+
+
+# # pcd_reader
+# add_executable(leo src/leo.cpp)
+# ament_target_dependencies(leo
+# tf2
+# tf2_ros
+# PCL
+# Eigen3
+# geometry_msgs
+# sensor_msgs
+# rclcpp)
+# install(TARGETS
+# leo
+# DESTINATION lib/${PROJECT_NAME}
+# )
+
+# # [Linker]>[Input]>[Additional Dependencies]
+# target_link_libraries( leo ${PCL_LIBRARIES} )
+
+
+
+
+add_executable(point_cloud_registration src/point_cloud_registration.cpp)
+ament_target_dependencies(point_cloud_registration
 tf2
 tf2_ros
 PCL
@@ -84,12 +125,12 @@ geometry_msgs
 sensor_msgs
 rclcpp)
 install(TARGETS
-pcd_reader
+point_cloud_registration
 DESTINATION lib/${PROJECT_NAME}
 )
 
 # [Linker]>[Input]>[Additional Dependencies]
-target_link_libraries( pcd_reader ${PCL_LIBRARIES} )
+target_link_libraries( point_cloud_registration ${PCL_LIBRARIES} )
 
 
 
