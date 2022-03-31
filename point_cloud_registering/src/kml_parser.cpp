@@ -44,8 +44,41 @@ public:
     kmlengine::KmlFilePtr kml_file;
     kmldom::FeaturePtr root;
     kmldom::KmlDomType type;
+    kmldom::ContainerPtr container;
 
     LineStringVector line_string_vector;
+
+
+
+    void line_string_extract(const kmldom::FeaturePtr& root_feature, LineStringVector* line_string_vector)
+    // Gets the string line in the kml file and extracts the data that needed.
+    {
+        // get the root type
+        kmldom::KmlDomType type = root_feature->Type();
+        std::cout << "root type: " << type << std::endl;
+        
+        // make a container
+        kmldom::ContainerPtr cont = kmldom::AsContainer(root_feature);
+
+        // get the all features for container and inner values.
+        for(uint i = 0; i < cont->get_feature_array_size(); i++)
+        {
+            kmldom::FeaturePtr inner_feature = cont->get_feature_array_at(i);
+            line_string_extract(inner_feature, line_string_vector);
+        }
+
+        // make a placemark for get the data
+        kmldom::PlacemarkPtr placemark = kmldom::AsPlacemark(root_feature);
+
+        // get the geometry
+        kmldom::GeometryPtr geometry = placemark->get_geometry();
+
+        // make a string the geometry
+        kmldom::LineStringPtr lineString = kmldom::AsLineString(geometry);
+
+        // push
+        line_string_vector->push_back(lineString);
+    }
     
     
     KmlClass()
@@ -81,7 +114,18 @@ public:
         type = root->Type();
         RCLCPP_INFO_STREAM(this->get_logger(), "root type: " << type);
 
+        line_string_extract(root, &line_string_vector);
 
+        for(uint i = 0; i < line_string_vector.size(); i++)
+        {
+            kmldom::LineStringPtr line_string = line_string_vector[i];
+            kmldom::CoordinatesPtr coordinates = line_string->get_coordinates();
+            for(uint j = 0; j < coordinates->get_coordinates_array_size(); j++)
+            {
+                kmlbase::Vec3 coord = coordinates->get_coordinates_array_at(j);
+                std::cout << "Lat: " << coord.get_latitude() << " Lng: " << coord.get_longitude() << std::endl;
+            }
+        }
 
 
         while (rclcpp::ok())
