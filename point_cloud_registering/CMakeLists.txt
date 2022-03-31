@@ -32,6 +32,7 @@ find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
+find_package(LibKML)
 
 if( PCL_FOUND )
   # [C/C++]>[General]>[Additional Include Directories]
@@ -54,7 +55,7 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 
-
+# Point Cloud Registration
 
 add_executable(point_cloud_registration src/point_cloud_registration.cpp)
 ament_target_dependencies(point_cloud_registration
@@ -72,6 +73,26 @@ DESTINATION lib/${PROJECT_NAME}
 
 # [Linker]>[Input]>[Additional Dependencies]
 target_link_libraries( point_cloud_registration ${PCL_LIBRARIES} )
+
+
+# KML Parser
+
+add_executable(kml_parser src/kml_parser.cpp)
+ament_target_dependencies(kml_parser
+tf2
+LibKML
+Eigen3
+geometry_msgs
+sensor_msgs
+rclcpp)
+install(TARGETS
+kml_parser
+DESTINATION lib/${PROJECT_NAME}
+)
+
+# [Linker]>[Input]>[Additional Dependencies]
+target_link_libraries( kml_parser ${PCL_LIBRARIES} )
+
 
 
 

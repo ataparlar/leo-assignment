@@ -167,6 +167,8 @@ public:
 
         pcl::toROSMsg(*aligned_cloud, aligned_ros);
 
+        pcl::io::savePCDFileASCII("test_pcd.pcd", *aligned_cloud);
+
 
 
 
