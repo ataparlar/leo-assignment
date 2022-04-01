@@ -85,7 +85,7 @@ public:
         : Node("kml_parser")
     {
         // publishers
-        path_publisher = this->create_publisher<nav_msgs::msg::Path>("/kml_path", 10);
+        path_publisher = this->create_publisher<nav_msgs::msg::Path>("/kml_path", 1);
 
         this->declare_parameter<std::string>("kml_file", "default");
 

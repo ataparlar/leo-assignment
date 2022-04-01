@@ -16,13 +16,15 @@ def generate_launch_description():
                     'launch',
                     'pc_register.launch.py',
                 ])
-            ]),
+            ])
+        ),
+        IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
                     FindPackageShare('point_cloud_registering'),
                     'launch',
-                    'kml_parser.launch.py'
+                    'kml_parser.launch.py',
                 ])
-            ]),
-        )
+            ])
+        ),
     ])

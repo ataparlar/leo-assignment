@@ -11,13 +11,6 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    config = os.path.join(
-      get_package_share_directory('point_cloud_registering'),
-      'config',
-      'kml_parser.yaml'
-      )
-
-
     kml_file_launch_argument = DeclareLaunchArgument(
         'kml_file',
         default_value=""
