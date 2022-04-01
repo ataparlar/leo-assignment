@@ -36,10 +36,10 @@ find_package(LibKML)
 
 if( PCL_FOUND )
   # [C/C++]>[General]>[Additional Include Directories]
-  include_directories( ${PCL_INCLUDE_DIRS} )
+  include_directories( ${PCL_LIBRARY_DIRS} )
 
   # [C/C++]>[Preprocessor]>[Preprocessor Definitions]
-  add_definitions( ${PCL_DEFINITIONS} )
+  add_definitions( ${PCL_LIBRARY_DIRS} )
   
   # For Use Not PreCompiled Features 
   #add_definitions( -DPCL_NO_PRECOMPILE )
@@ -50,9 +50,52 @@ if( PCL_FOUND )
 endif()
 
 
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+
+
+
+if( LIBKML_INCLUDE_DIR )
+    # Already in cache, be silent
+    set( LibKML_FIND_QUIETLY TRUE )
+endif()
+
+find_path( LIBKML_INCLUDE_DIR       kml/dom.h )
+find_path( LIBKML_INCLUDE_DIR       kml/engine.h )
+find_path( LIBKML_INCLUDE_DIR       kml/base.h )
+find_library( LIBKML_BASE_LIBRARY   NAMES kmlbase )
+find_library( LIBKML_DOM_LIBRARY    NAMES kmldom )
+find_library( LIBKML_ENGINE_LIBRARY NAMES kmlengine )
+
+mark_as_advanced(
+  LIBKML_INCLUDE_DIR
+  LIBKML_BASE_LIBRARY
+  LIBKML_DOM_LIBRARY
+  LIBKML_ENGINE_LIBRARY
+  )
+
+# handle the QUIETLY and REQUIRED arguments and set LIBKML_FOUND to TRUE if
+# all listed variables are TRUE
+include( FindPackageHandleStandardArgs )
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+  LibKML
+  DEFAULT_MSG
+  LIBKML_INCLUDE_DIR
+  LIBKML_BASE_LIBRARY
+  LIBKML_DOM_LIBRARY
+  LIBKML_ENGINE_LIBRARY
+  )
+
+if(LIBKML_FOUND)
+  set(LIBKML_INCLUDE_DIRS ${LIBKML_INCLUDE_DIR})
+  set(LIBKML_LIBRARIES
+    ${LIBKML_BASE_LIBRARY}
+    ${LIBKML_DOM_LIBRARY}
+    ${LIBKML_ENGINE_LIBRARY}
+    )
+endif()
+
+
+
+
 
 
 # Point Cloud Registration
@@ -91,7 +134,11 @@ DESTINATION lib/${PROJECT_NAME}
 )
 
 # [Linker]>[Input]>[Additional Dependencies]
-target_link_libraries( kml_parser ${PCL_LIBRARIES} )
+target_link_libraries( kml_parser
+${LIBKML_BASE_LIBRARY}
+${LIBKML_DOM_LIBRARY}
+${LIBKML_ENGINE_LIBRARY}
+)
 
 
 

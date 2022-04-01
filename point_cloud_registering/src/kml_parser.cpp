@@ -23,7 +23,7 @@
 #include <tf2/convert.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-#include <Eigen/Core>
+//#include <Eigen/Core>
 #include <kml/base/file.h>
 #include <kml/engine.h>
 #include <kml/dom.h>
@@ -35,7 +35,7 @@ typedef std::vector<kmldom::LineStringPtr> LineStringVector;
 class KmlClass : public rclcpp::Node
 {
 public:
-    const char* kmlfile;
+    std::string kmlfile;
     std::string file_data;
     kmlbase::File kmlbase;
     std::string kml;
@@ -44,53 +44,65 @@ public:
     kmlengine::KmlFilePtr kml_file;
     kmldom::FeaturePtr root;
     kmldom::KmlDomType type;
-    kmldom::ContainerPtr container;
+    kmldom::ContainerPtr cont;
+    kmldom::FeaturePtr inner_feature;
+    kmldom::PlacemarkPtr placemark;
+    kmldom::GeometryPtr geometry;
+    kmldom::LineStringPtr line_string;
+    kmldom::CoordinatesPtr coordinates;
 
     LineStringVector line_string_vector;
 
 
 
-    void line_string_extract(const kmldom::FeaturePtr& root_feature, LineStringVector* line_string_vector)
+    void line_string_extract(const kmlengine::KmlFilePtr& kml_file, LineStringVector* line_string_vector)
     // Gets the string line in the kml file and extracts the data that needed.
     {
         // get the root type
-        kmldom::KmlDomType type = root_feature->Type();
-        std::cout << "root type: " << type << std::endl;
+        // type = root_feature->Type();
+        // RCLCPP_INFO_STREAM(this->get_logger(), "root type: " << type );
         
         // make a container
-        kmldom::ContainerPtr cont = kmldom::AsContainer(root_feature);
+        // cont = kmldom::AsContainer(root_feature);
 
-        // get the all features for container and inner values.
-        for(uint i = 0; i < cont->get_feature_array_size(); i++)
-        {
-            kmldom::FeaturePtr inner_feature = cont->get_feature_array_at(i);
-            line_string_extract(inner_feature, line_string_vector);
-        }
+        // if(cont)
+        // {
+        //     // get the all features for container and inner values.
+        //     for(uint i = 0; i < cont->get_feature_array_size(); i++)
+        //     {
+        //         inner_feature = cont->get_feature_array_at(i);
+        //         line_string_extract(inner_feature, line_string_vector);
+        //     }
+        // }
+
 
         // make a placemark for get the data
-        kmldom::PlacemarkPtr placemark = kmldom::AsPlacemark(root_feature);
+        placemark = kmldom::AsPlacemark(kml_file->GetObjectById("0C11468A89207A6E17BE"));
 
         // get the geometry
-        kmldom::GeometryPtr geometry = placemark->get_geometry();
+        geometry = placemark->get_geometry();
 
         // make a string the geometry
-        kmldom::LineStringPtr lineString = kmldom::AsLineString(geometry);
+        line_string = kmldom::AsLineString(geometry);
 
         // push
-        line_string_vector->push_back(lineString);
+        line_string_vector->push_back(line_string);
     }
     
     
     KmlClass()
         : Node("kml_parser")
     {
-        // // check if file can be read
+        this->declare_parameter<std::string>("kml_file", "default");
 
-        // if (!kmlbase::File::ReadFileToString(kmlfile, &file_data)) {
-        //     std::cout << kmlfile << " read failed" << std::endl;
-        // }
+        this->get_parameter("kml_file", kmlfile);
+        //RCLCPP_INFO_STREAM(this->get_logger(), kmlfile.size );
 
-        // // read the file if file can be read
+        if (!kmlbase::File::ReadFileToString(kmlfile, &file_data)) {
+            RCLCPP_WARN_STREAM(this->get_logger(), kmlfile << " read failed");
+        }
+
+        // read the file if file can be read
 
         // if (kmlengine::KmzFile::IsKmz(file_data)) {
         //     kmz_file = kmlengine::KmzFile::OpenFromString(kmlfile);
@@ -105,25 +117,35 @@ public:
         // }
 
         // get the file
-        kml_file = kmlengine::KmlFile::CreateFromParse(kml, &errors);
+        kml_file = kmlengine::KmlFile::CreateFromParse(file_data, &errors);
+        if (!kml_file)
+        {
+            RCLCPP_INFO_STREAM(this->get_logger(), errors);
+        }
+
+        // RCLCPP_INFO_STREAM(this->get_logger(), "eeeeeeeeeeeeee");
+
+        //placemark = kmldom::AsPlacemark(kml_file->GetObjectById("0C11468A89207A6E17BE"));
+        //RCLCPP_INFO_STREAM(this->get_logger(), placemark->get_unknown_elements_array_at());
+
+        // RCLCPP_INFO_STREAM(this->get_logger(), "AAAAAAAAAAAAAAAAAAAA");
 
         // read the file features
-        root = kmlengine::GetRootFeature(kml_file->get_root());
+        //root = kmlengine::GetRootFeature(kml_file->get_root());
+        //RCLCPP_WARN_STREAM(this->get_logger(), root);
 
-        // get the root type
-        type = root->Type();
-        RCLCPP_INFO_STREAM(this->get_logger(), "root type: " << type);
 
-        line_string_extract(root, &line_string_vector);
+        line_string_extract(kml_file, &line_string_vector);
 
         for(uint i = 0; i < line_string_vector.size(); i++)
         {
-            kmldom::LineStringPtr line_string = line_string_vector[i];
-            kmldom::CoordinatesPtr coordinates = line_string->get_coordinates();
+            line_string = line_string_vector[i];
+            coordinates = line_string->get_coordinates();
             for(uint j = 0; j < coordinates->get_coordinates_array_size(); j++)
             {
                 kmlbase::Vec3 coord = coordinates->get_coordinates_array_at(j);
-                std::cout << "Lat: " << coord.get_latitude() << " Lng: " << coord.get_longitude() << std::endl;
+                RCLCPP_INFO_STREAM(this->get_logger(), "Lat: " << coord.get_latitude()
+                                                    << " Lng: " << coord.get_longitude());
             }
         }
 
