@@ -28,11 +28,14 @@ find_package(rclcpp_components REQUIRED)
 find_package(PCL 1.12 REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(Eigen3 3.3 REQUIRED)
-find_package(LibKML)
+find_package(LibKML REQUIRED)
+find_package(GeographicLib REQUIRED)
+
 
 if( PCL_FOUND )
   # [C/C++]>[General]>[Additional Include Directories]
@@ -48,6 +51,9 @@ if( PCL_FOUND )
   link_directories( ${PCL_LIBRARY_DIRS} )
 
 endif()
+
+
+
 
 
 
@@ -124,8 +130,9 @@ add_executable(kml_parser src/kml_parser.cpp)
 ament_target_dependencies(kml_parser
 tf2
 LibKML
-Eigen3
+GeographicLib
 geometry_msgs
+nav_msgs
 sensor_msgs
 rclcpp)
 install(TARGETS
@@ -138,6 +145,7 @@ target_link_libraries( kml_parser
 ${LIBKML_BASE_LIBRARY}
 ${LIBKML_DOM_LIBRARY}
 ${LIBKML_ENGINE_LIBRARY}
+${GeographicLib_LIBRARIES}
 )
 
 
